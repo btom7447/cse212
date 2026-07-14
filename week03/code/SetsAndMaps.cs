@@ -21,8 +21,23 @@ public static class SetsAndMaps
     /// <param name="words">An array of 2-character words (lowercase, no duplicates)</param>
     public static string[] FindPairs(string[] words)
     {
-        // TODO Problem 1 - ADD YOUR CODE HERE
-        return [];
+        var seen = new HashSet<string>();
+        var pairs = new List<string>();
+
+        foreach (var word in words)
+        {
+            // Words with two identical letters (e.g. 'aa') can never form a pair
+            if (word[0] == word[1])
+                continue;
+
+            var reversed = $"{word[1]}{word[0]}";
+            if (seen.Contains(reversed))
+                pairs.Add($"{word} & {reversed}");
+            else
+                seen.Add(word);
+        }
+
+        return pairs.ToArray();
     }
 
     /// <summary>
@@ -42,7 +57,8 @@ public static class SetsAndMaps
         foreach (var line in File.ReadLines(filename))
         {
             var fields = line.Split(",");
-            // TODO Problem 2 - ADD YOUR CODE HERE
+            var degree = fields[3].Trim();
+            degrees[degree] = degrees.GetValueOrDefault(degree) + 1;
         }
 
         return degrees;
@@ -66,8 +82,30 @@ public static class SetsAndMaps
     /// </summary>
     public static bool IsAnagram(string word1, string word2)
     {
-        // TODO Problem 3 - ADD YOUR CODE HERE
-        return false;
+        var counts = new Dictionary<char, int>();
+
+        // Count each letter in word1 (ignoring spaces and case)
+        foreach (var c in word1)
+        {
+            if (c == ' ')
+                continue;
+            var letter = char.ToLower(c);
+            counts[letter] = counts.GetValueOrDefault(letter) + 1;
+        }
+
+        // Subtract each letter in word2; fail if a letter is missing or used up
+        foreach (var c in word2)
+        {
+            if (c == ' ')
+                continue;
+            var letter = char.ToLower(c);
+            if (!counts.TryGetValue(letter, out var count) || count == 0)
+                return false;
+            counts[letter] = count - 1;
+        }
+
+        // Any leftover counts mean word1 had extra letters
+        return counts.Values.All(count => count == 0);
     }
 
     /// <summary>
@@ -96,11 +134,9 @@ public static class SetsAndMaps
 
         var featureCollection = JsonSerializer.Deserialize<FeatureCollection>(json, options);
 
-        // TODO Problem 5:
-        // 1. Add code in FeatureCollection.cs to describe the JSON using classes and properties 
-        // on those classes so that the call to Deserialize above works properly.
-        // 2. Add code below to create a string out each place a earthquake has happened today and its magitude.
-        // 3. Return an array of these string descriptions.
-        return [];
+        return featureCollection.Features
+            .Where(feature => feature.Properties.Place != null && feature.Properties.Mag != null)
+            .Select(feature => $"{feature.Properties.Place} - Mag {feature.Properties.Mag}")
+            .ToArray();
     }
 }
